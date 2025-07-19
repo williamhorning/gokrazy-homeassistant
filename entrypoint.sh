@@ -24,11 +24,6 @@ echo "[entrypoint] starting bluetoothd..."
 /sbin/bluetoothd --experimental &
 
 echo "[entrypoint] bluetoothd started"
-echo "[entrypoint] starting matter server..."
-
-/usr/local/bin/python3 -m matter_server.server --storage-path /data/matter --bluetooth-adapter &
-
-echo "[entrypoint] matter server started"
 echo "[entrypoint] handing off..."
 
 exec /usr/local/bin/python3 -m homeassistant --config /config

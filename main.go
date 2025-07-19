@@ -12,10 +12,7 @@ import (
 	"syscall"
 )
 
-const (
-	containerName  = "hasst"
-	containerImage = "ghcr.io/williamhorning/gokrazy-homeassistant:latest"
-)
+const containerImage = "ghcr.io/williamhorning/gokrazy-homeassistant:latest"
 
 var containerArgs = []string{
 	"--init",
@@ -83,24 +80,16 @@ func podman(args ...string) error {
 }
 
 func main() {
-	slog.Info("starting container... ", "name", containerName, "image", containerImage)
+	slog.Info("starting container... ", "image", containerImage)
 
 	slog.Info("stopping existing containers...")
 
-	if err := podman("kill", containerName); err != nil {
-		slog.Warn("couldn't kill container (might not be running)", "err", err)
+	if err := podman("kill", "hasst", "mattr"); err != nil {
+		slog.Warn("couldn't kill containers (might not be running)", "err", err)
 	}
 
-	if err := podman("rm", containerName); err != nil {
-		slog.Warn("couldn't remove container (might not exist)", "err", err)
-	}
-
-	slog.Info("pulling image...", "image", containerImage)
-
-	if err := podman("pull", containerImage); err != nil {
-		slog.Error("failed to pull image", "err", err)
-
-		os.Exit(1)
+	if err := podman("rm", "hasst", "mattr"); err != nil {
+		slog.Warn("couldn't remove containers (might not exist)", "err", err)
 	}
 
 	slog.Info("making directories...")
@@ -113,11 +102,22 @@ func main() {
 		slog.Warn("failed to make dir", "err", err)
 	}
 
-	runArgs := []string{"run", "-d", "--name", containerName}
+	runArgs := []string{"run", "-d", "--name", "hasst"}
 	runArgs = append(runArgs, containerArgs...)
 	runArgs = append(runArgs, containerImage)
 
-	slog.Info("starting image...", "args", runArgs)
+	slog.Info("starting main image...", "args", runArgs)
+
+	if err := podman(runArgs...); err != nil {
+		slog.Error("failed to start container", "err", err)
+
+		os.Exit(1)
+	}
+
+	runArgs[3] = "mattr"
+	runArgs[len(runArgs)-1] = "ghcr.io/home-assistant-libs/python-matter-server:stable"
+
+	slog.Info("starting matter image...", "args", runArgs)
 
 	if err := podman(runArgs...); err != nil {
 		slog.Error("failed to start container", "err", err)
@@ -135,8 +135,8 @@ func main() {
 
 	slog.Warn("stopping container...")
 
-	if err := podman("stop", containerName); err != nil {
-		slog.Error("failed stopping container", "err", err)
+	if err := podman("stop", "hasst", "mattr"); err != nil {
+		slog.Error("failed stopping containers", "err", err)
 	} else {
 		slog.Info("container stopped")
 	}
