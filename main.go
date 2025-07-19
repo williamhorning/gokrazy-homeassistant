@@ -84,11 +84,11 @@ func main() {
 
 	slog.Info("stopping existing containers...")
 
-	if err := podman("kill", "hasst", "mattr"); err != nil {
+	if err := podman("kill", "--all"); err != nil {
 		slog.Warn("couldn't kill containers (might not be running)", "err", err)
 	}
 
-	if err := podman("rm", "hasst", "mattr"); err != nil {
+	if err := podman("rm", "-a", "-f"); err != nil {
 		slog.Warn("couldn't remove containers (might not exist)", "err", err)
 	}
 
@@ -102,11 +102,22 @@ func main() {
 		slog.Warn("failed to make dir", "err", err)
 	}
 
-	runArgs := []string{"run", "-d", "--name", "hasst"}
+	runArgs := []string{"run", "-d", "--name", "bluez"}
 	runArgs = append(runArgs, containerArgs...)
 	runArgs = append(runArgs, containerImage)
 
-	slog.Info("starting main image...", "args", runArgs)
+	slog.Info("starting bluetooth image...", "args", runArgs)
+
+	if err := podman(runArgs...); err != nil {
+		slog.Error("failed to start container", "err", err)
+
+		os.Exit(1)
+	}
+
+	runArgs[3] = "hasst"
+	runArgs[len(runArgs)-1] = "ghcr.io/home-assistant/home-assistant:dev"
+
+	slog.Info("starting hasst image...", "args", runArgs)
 
 	if err := podman(runArgs...); err != nil {
 		slog.Error("failed to start container", "err", err)

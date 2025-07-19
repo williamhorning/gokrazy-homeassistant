@@ -8,7 +8,7 @@ echo "[entrypoint] starting dbus..."
 DBUS_SOCKET="/run/dbus/system_bus_socket"
 timeout=10
 while [ ! -S "$DBUS_SOCKET" ] && [ "$timeout" -gt 0 ]; do
-  echo "[entrypoint] Waiting for D-Bus socket ($DBUS_SOCKET)..."
+  echo "[entrypoint] waiting for ($DBUS_SOCKET)..."
   sleep 1
   timeout=$((timeout - 1))
 done
@@ -21,9 +21,4 @@ fi
 
 echo "[entrypoint] starting bluetoothd..."
 
-/sbin/bluetoothd --experimental &
-
-echo "[entrypoint] bluetoothd started"
-echo "[entrypoint] handing off..."
-
-exec /usr/local/bin/python3 -m homeassistant --config /config
+exec /sbin/bluetoothd --experimental
