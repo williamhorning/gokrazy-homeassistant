@@ -23,6 +23,7 @@ COPY --from=bluez-base /etc/dbus-1 /etc/dbus-1
 COPY --from=bluez-base /lib/udev /lib/udev
 COPY --from=bluez-base /usr/bin/udevadm /usr/bin/udevadm
 
+COPY --from=matter-server-base /usr/local/lib/python3.12/site-packages/chip /usr/local/lib/python3.13/site-packages/chip
 COPY --from=matter-server-base /usr/local/lib/python3.12/site-packages/chip* /usr/local/lib/python3.13/site-packages/
 COPY --from=matter-server-base /usr/local/lib/python3.12/site-packages/matter_server* /usr/local/lib/python3.13/site-packages/
 

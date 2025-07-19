@@ -1,11 +1,9 @@
 #!/bin/sh
 set -e
 
-PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
 echo "[entrypoint] starting dbus..."
 
-dbus-broker --controller --machine-id=default --unix=/run/dbus/system_bus_socket &
+/usr/bin/dbus-broker --controller --machine-id=default --unix=/run/dbus/system_bus_socket &
 
 DBUS_SOCKET="/run/dbus/system_bus_socket"
 timeout=10
@@ -23,14 +21,14 @@ fi
 
 echo "[entrypoint] starting bluetoothd..."
 
-bluetoothd --experimental &
+/sbin/bluetoothd --experimental &
 
 echo "[entrypoint] bluetoothd started"
 echo "[entrypoint] starting matter server..."
 
-matter_server --storage-path /data/matter --bluetooth-adapter &
+/usr/local/bin/python3 -m matter_server.server --storage-path /data/matter --bluetooth-adapter &
 
 echo "[entrypoint] matter server started"
 echo "[entrypoint] handing off..."
 
-exec python3 -m homeassistant --config /config
+exec /usr/local/bin/python3 -m homeassistant --config /config
