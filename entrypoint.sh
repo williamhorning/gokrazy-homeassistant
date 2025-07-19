@@ -1,10 +1,6 @@
 #!/bin/sh
 set -e
 
-echo "installing tweaked packages..."
-
-pip install --no-cache-dir cheshire==0.5.6 bleak==0.22.3
-
 echo "starting dbus..."
 
 mkdir -p /run/dbus

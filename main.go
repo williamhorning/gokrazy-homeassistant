@@ -2,6 +2,7 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"log/slog"
 	"os"
@@ -100,6 +101,16 @@ func main() {
 		slog.Error("failed to pull image", "err", err)
 
 		os.Exit(1)
+	}
+
+	slog.Info("making directories...")
+
+	if err := cmp.Or(
+		os.MkdirAll("/perm/homeassistant", os.ModePerm),
+		os.MkdirAll("/perm/matter", os.ModePerm),
+		os.MkdirAll("/run/dbus", os.ModePerm),
+	); err != nil {
+		slog.Warn("failed to make dir", "err", err)
 	}
 
 	runArgs := []string{"run", "-d", "--name", containerName}
