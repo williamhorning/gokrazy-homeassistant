@@ -13,7 +13,7 @@ import (
 
 const (
 	containerName  = "hasst"
-	containerImage = "github.com/williamhorning/gokrazy-homeassistant:latest"
+	containerImage = "ghcr.io/williamhorning/gokrazy-homeassistant:latest"
 )
 
 var containerArgs = []string{
