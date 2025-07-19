@@ -92,6 +92,17 @@ func main() {
 		slog.Warn("couldn't remove containers (might not exist)", "err", err)
 	}
 
+	slog.Info("pulling containers...")
+
+	if err := podman(
+		"pull",
+		containerImage,
+		"ghcr.io/home-assistant/home-assistant:dev",
+		"ghcr.io/home-assistant-libs/python-matter-server:stable",
+	); err != nil {
+		slog.Warn("couldn't pull containers (might be fine)", "err", err)
+	}
+
 	slog.Info("making directories...")
 
 	if err := cmp.Or(
