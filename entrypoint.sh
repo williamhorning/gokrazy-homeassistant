@@ -3,15 +3,14 @@ set -e
 
 echo "starting dbus..."
 
-mkdir -p /run/dbus
-dbus-broker --controller --unix=/run/dbus/system_bus_socket &
+/usr/bin/dbus-broker --controller --unix=/run/dbus/system_bus_socket &
 
 DBUS_SOCKET="/run/dbus/system_bus_socket"
 timeout=10
 while [ ! -S "$DBUS_SOCKET" ] && [ "$timeout" -gt 0 ]; do
   echo "waiting for ($DBUS_SOCKET)..."
   sleep 1
-  timeout=$(("$timeout" - 1))
+  timeout=$((timeout-1))
 done
 
 if [ ! -S "$DBUS_SOCKET" ]; then
@@ -22,15 +21,14 @@ fi
 
 echo "starting bluetooth..."
 
-bluetoothd --experimental &
+/sbin/bluetoothd --experimental &
 
 echo "bluetooth started"
 echo "starting matter server..."
 
-mkdir -p /data/matter
-python3 -m matter_server.server --storage-path /data/matter --bluetooth-adapter &
+/usr/local/bin/python3 -m matter_server.server --storage-path /data/matter --bluetooth-adapter &
 
 echo "matter server started"
 echo "starting home assistant..."
 
-python -m homeassistant --config /config
+/usr/local/bin/python3 -m homeassistant --config /config
