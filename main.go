@@ -1,0 +1,134 @@
+// package main runs a given docker container for home assistant
+package main
+
+import (
+	"fmt"
+	"log/slog"
+	"os"
+	"os/exec"
+	"os/signal"
+	"strings"
+	"syscall"
+)
+
+const (
+	containerName  = "hasst"
+	containerImage = "github.com/williamhorning/gokrazy-homeassistant:latest"
+)
+
+var containerArgs = []string{
+	"--init",
+	"--net=host",
+	"--privileged",
+	"-v", "/run/dbus:/run/dbus",
+	"-v", "/dev:/dev",
+	"-v", "/sys:/sys",
+	"--security-opt", "apparmor:unconfined",
+	"--cap-add=NET_ADMIN",
+	"--cap-add=NET_RAW",
+	// persistent storage
+	"-v", "/perm/homeassistant:/config",
+	"-v", "/perm/matter:/data/matter",
+	// home assistant configuration
+	"-e", "PUID=1000",
+	"-e", "PGID=1000",
+	"-e", "TZ=America/New_York",
+}
+
+// add things to the path to make things show up
+// source: https://gokrazy.org/packages/docker-containers/
+func expandPath(env []string) []string {
+	extra := "/user:/usr/local/bin"
+	found := false
+
+	for idx, val := range env {
+		parts := strings.Split(val, "=")
+		if len(parts) < 2 {
+			continue // malformed entry
+		}
+
+		key := parts[0]
+		if key != "PATH" {
+			continue
+		}
+
+		val := strings.Join(parts[1:], "=")
+		env[idx] = key + "=" + extra + ":" + val
+		found = true
+	}
+
+	if !found {
+		env = append(env, "PATH="+extra+":"+"/usr/local/sbin:/sbin:/usr/sbin:/usr/local/bin:/bin:/usr/bin")
+	}
+
+	return env
+}
+
+// podman executes a podman command with the given arguments.
+// source: https://gokrazy.org/packages/docker-containers/
+func podman(args ...string) error {
+	podmanCmd := exec.Command("/usr/local/bin/podman", args...)
+	podmanCmd.Env = expandPath(os.Environ())
+	podmanCmd.Env = append(podmanCmd.Env, "TMPDIR=/tmp")
+	podmanCmd.Stdin = os.Stdin
+	podmanCmd.Stdout = os.Stdout
+	podmanCmd.Stderr = os.Stderr
+
+	if err := podmanCmd.Run(); err != nil {
+		return fmt.Errorf("podman command %v failed: %w", podmanCmd.Args, err)
+	}
+
+	return nil
+}
+
+func main() {
+	slog.Info("starting container... ", "name", containerName, "image", containerImage)
+
+	slog.Info("stopping existing containers...")
+
+	if err := podman("kill", containerName); err != nil {
+		slog.Warn("couldn't kill container (might not be running)", "err", err)
+	}
+
+	if err := podman("rm", containerName); err != nil {
+		slog.Warn("couldn't remove container (might not exist)", "err", err)
+	}
+
+	slog.Info("pulling image...", "image", containerImage)
+
+	if err := podman("pull", containerImage); err != nil {
+		slog.Error("failed to pull image", "err", err)
+
+		os.Exit(1)
+	}
+
+	runArgs := []string{"run", "-d", "--name", containerName}
+	runArgs = append(runArgs, containerArgs...)
+	runArgs = append(runArgs, containerImage)
+
+	slog.Info("starting image...", "args", runArgs)
+
+	if err := podman(runArgs...); err != nil {
+		slog.Error("failed to start container", "err", err)
+
+		os.Exit(1)
+	}
+
+	slog.Info("started container successfully!")
+
+	quitChannel := make(chan os.Signal, 1)
+	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
+	s := <-quitChannel
+
+	slog.Warn("received signal, shutting down...", "signal", s.String())
+
+	slog.Warn("stopping container...")
+
+	if err := podman("stop", containerName); err != nil {
+		slog.Error("failed stopping container", "err", err)
+	} else {
+		slog.Info("container stopped")
+	}
+
+	slog.Error("exited!")
+}
