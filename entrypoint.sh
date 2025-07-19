@@ -1,34 +1,36 @@
 #!/bin/sh
 set -e
 
-echo "starting dbus..."
+PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-/usr/bin/dbus-broker --controller --unix=/run/dbus/system_bus_socket &
+echo "[entrypoint] starting dbus..."
+
+dbus-broker --controller --machine-id=default --unix=/run/dbus/system_bus_socket &
 
 DBUS_SOCKET="/run/dbus/system_bus_socket"
 timeout=10
 while [ ! -S "$DBUS_SOCKET" ] && [ "$timeout" -gt 0 ]; do
-  echo "waiting for ($DBUS_SOCKET)..."
+  echo "[entrypoint] Waiting for D-Bus socket ($DBUS_SOCKET)..."
   sleep 1
-  timeout=$((timeout-1))
+  timeout=$((timeout - 1))
 done
 
 if [ ! -S "$DBUS_SOCKET" ]; then
-  echo "dbus not found after timeout, things might fail"
+  echo "[entrypoint] dbus not found after timeout: things might fail"
 else
-  echo "dbus started"
+  echo "[entrypoint] dbus started"
 fi
 
-echo "starting bluetooth..."
+echo "[entrypoint] starting bluetoothd..."
 
-/sbin/bluetoothd --experimental &
+bluetoothd --experimental &
 
-echo "bluetooth started"
-echo "starting matter server..."
+echo "[entrypoint] bluetoothd started"
+echo "[entrypoint] starting matter server..."
 
-/usr/local/bin/python3 -m matter_server.server --storage-path /data/matter --bluetooth-adapter &
+matter_server --storage-path /data/matter --bluetooth-adapter &
 
-echo "matter server started"
-echo "starting home assistant..."
+echo "[entrypoint] matter server started"
+echo "[entrypoint] handing off..."
 
-/usr/local/bin/python3 -m homeassistant --config /config
+exec python3 -m homeassistant --config /config
