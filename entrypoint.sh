@@ -1,9 +1,13 @@
 #!/bin/sh
 set -e
 
-echo "[entrypoint] starting dbus..."
+echo "[entrypoint] setting up dbus..."
 
-/usr/bin/dbus-broker --controller --unix=/run/dbus/system_bus_socket &
+mkdir -p /run/dbus
+chmod 777 /run/dbus
+
+echo "[entrypoint] starting dbus..."
+/usr/bin/dbus-daemon --system --fork
 
 DBUS_SOCKET="/run/dbus/system_bus_socket"
 timeout=10
@@ -20,5 +24,4 @@ else
 fi
 
 echo "[entrypoint] starting bluetoothd..."
-
-exec /sbin/bluetoothd --experimental
+exec /usr/libexec/bluetooth/bluetoothd --experimental
