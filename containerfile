@@ -9,8 +9,7 @@ RUN apk update \
     dbus \
     udev \
     iproute2 \
-    bash \
-    && apk clean
+    bash
 
 # Create necessary directories for DBus
 RUN mkdir -p /run/dbus && chmod 777 /run/dbus
