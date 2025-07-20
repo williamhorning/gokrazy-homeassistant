@@ -24,4 +24,4 @@ else
 fi
 
 echo "[entrypoint] starting bluetoothd..."
-exec /usr/libexec/bluetooth/bluetoothd --experimental
+exec /usr/lib/bluetooth/bluetoothd --experimental
