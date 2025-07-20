@@ -3,7 +3,7 @@ set -e
 
 echo "[entrypoint] starting dbus..."
 
-/usr/bin/dbus-broker --controller --machine-id=default --unix=/run/dbus/system_bus_socket &
+/usr/bin/dbus-broker --controller --unix=/run/dbus/system_bus_socket &
 
 DBUS_SOCKET="/run/dbus/system_bus_socket"
 timeout=10

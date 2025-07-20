@@ -15,7 +15,6 @@ import (
 const containerImage = "ghcr.io/williamhorning/gokrazy-homeassistant:latest"
 
 var containerArgs = []string{
-	"--init",
 	"--net=host",
 	"--privileged",
 	"-v", "/run/dbus:/run/dbus",
@@ -117,7 +116,7 @@ func main() {
 	runArgs = append(runArgs, containerArgs...)
 	runArgs = append(runArgs, containerImage)
 
-	slog.Info("starting bluetooth image...", "args", runArgs)
+	slog.Info("starting bluetooth image...", "args", append(runArgs, "--init"))
 
 	if err := podman(runArgs...); err != nil {
 		slog.Error("failed to start container", "err", err)
