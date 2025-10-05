@@ -15,7 +15,7 @@ Assistant and other things on top of gokrazy.
 
 Add the following packages to gokrazy, then build and deploy as usual:
 
-```
+```sh
 # podman support
 gok add github.com/gokrazy/iptables
 gok add github.com/gokrazy/nsenter

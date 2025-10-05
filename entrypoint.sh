@@ -1,27 +1,24 @@
 #!/bin/sh
 set -e
 
-echo "[entrypoint] setting up dbus..."
+echo "[entrypoint] Starting DBus..."
 
 mkdir -p /run/dbus
-chmod 777 /run/dbus
+chmod 755 /run/dbus
 
-echo "[entrypoint] starting dbus..."
 /usr/bin/dbus-daemon --system --fork
 
 DBUS_SOCKET="/run/dbus/system_bus_socket"
-timeout=10
-while [ ! -S "$DBUS_SOCKET" ] && [ "$timeout" -gt 0 ]; do
-  echo "[entrypoint] waiting for ($DBUS_SOCKET)..."
+for i in $(seq 1 10); do [ -S "$DBUS_SOCKET" ] && break
+  echo "[entrypoint] Waiting for DBus socket..."
   sleep 1
-  timeout=$((timeout - 1))
 done
 
 if [ ! -S "$DBUS_SOCKET" ]; then
-  echo "[entrypoint] dbus not found after timeout: things might fail"
+  echo "[entrypoint] DBus socket not found after timeout"
 else
-  echo "[entrypoint] dbus started"
+  echo "[entrypoint] DBus is up"
 fi
 
-echo "[entrypoint] starting bluetoothd..."
+echo "[entrypoint] Starting bluetoothd..."
 exec /usr/lib/bluetooth/bluetoothd --experimental

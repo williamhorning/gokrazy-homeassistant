@@ -1,22 +1,10 @@
 FROM alpine:latest
 
-ENV DEBIAN_FRONTEND=noninteractive
+RUN apk add --no-cache bluez dbus udev iproute2 bash
 
-# Install necessary packages
-RUN apk update \
-    && apk add --no-cache \
-    bluez \
-    dbus \
-    udev \
-    iproute2 \
-    bash
+RUN mkdir -p /run/dbus && chmod 755 /run/dbus
 
-# Create necessary directories for DBus
-RUN mkdir -p /run/dbus && chmod 777 /run/dbus
-
-# Copy the entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Set the entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
