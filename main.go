@@ -39,7 +39,7 @@ func main() {
 
 	createDirs("/perm/homeassistant", "/perm/matter", "/run/dbus")
 
-	startAndStream("bluez", bluezImage, []string{"-v", "/perm/homeassistant:/config", "-v", "/perm/matter:/data/matter"})
+	startAndStream("bluez", bluezImage, []string{"--init"})
 
 	startAndStream("hasst", homeAssistant, []string{"-v", "/perm/homeassistant:/config"})
 
@@ -111,7 +111,7 @@ func startAndStream(name, image string, extraArgs []string) {
 }
 
 func startContainer(name, image string, extraArgs []string) error {
-	args := append([]string{"run", "-d", "--name", name, "--init"}, sharedArgs...)
+	args := append([]string{"run", "-d", "--name", name}, sharedArgs...)
 	args = append(args, extraArgs...)
 	args = append(args, image)
 	slog.Info("starting container...", "name", name, "image", image)
